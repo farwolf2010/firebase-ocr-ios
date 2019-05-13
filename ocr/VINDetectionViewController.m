@@ -58,29 +58,11 @@
     //初始化摄像头
     [self initAVCaptureSession];
     self.isScan=true;
+    
+    
 }
 
-//-(void)setScanArea:(CGRect )frame{
-////    AVCaptureVideoPreviewLayer *layer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
-////    CGRect rect=  [self.previewLayer metadataOutputRectOfInterestForRect:frame];
-////    NSString* key = (NSString*)kCVPixelBufferPixelFormatTypeKey;
-////    NSNumber* value = [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA];
-////    NSMutableDictionary* videoSettings = [NSMutableDictionary
-////                                   dictionaryWithObject:value forKey:key];
-////    [videoSettings setObject:@(rect.size.width) forKey:kCVPixelBufferWidthKey];
-////    [videoSettings setObject:@(rect.size.height) forKey:kCVPixelBufferHeightKey];
-////    [videoSettings setObject:@(100) forKey:kCVPixelBufferWidthKey];
-////    [videoSettings setObject:@(100) forKey:kCVPixelBufferHeightKey];
-////    [videoSettings setObject:@(rect.origin.y) forKey:kCVPixelBufferExtendedPixelsTopKey];
-////    [videoSettings setObject:@(rect.origin.x) forKey:kCVPixelBufferExtendedPixelsLeftKey];
-////    self.captureVideoDataOutput = [[AVCaptureVideoDataOutput alloc] init];
-////    [self.captureVideoDataOutput setVideoSettings:videoSettings];
-//    self.scanFrame=frame;
-//
-//}
-//-(void)setScanner: (WXFOcrScanner*) scanner{
-//    self.scanner=scanner;
-//}
+
 
 - (void)initAVCaptureSession{
     
@@ -332,13 +314,14 @@
   
     if( self.scanArea!=nil&&sampleBuffer!=nil)
     {
-        
-//        int left=[Weex length:self.scanArea.view.frame.origin.x instance:self.scanArea.weexInstance];
-//         int top=[Weex length:self.scanArea.view.frame.origin.y instance:self.scanArea.weexInstance];
-//         int width=[Weex length:self.scanArea.view.frame.size.width instance:self.scanArea.weexInstance];
-//          int height=[Weex length:self.scanArea.view.frame.size.height instance:self.scanArea.weexInstance];
-        
-         sampleBuffer=[self cropSampleBufferByHardware:sampleBuffer rect: self.scanArea.view.frame];
+        if(_scanFrame.size.width==0){
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _scanFrame=self.scanArea.view.frame;
+            });
+            return;
+        }
+      
+         sampleBuffer=[self cropSampleBufferByHardware:sampleBuffer rect:_scanFrame];
     }
    
     CVPixelBufferRef pixelBuffer = (CVPixelBufferRef)CMSampleBufferGetImageBuffer(sampleBuffer);
@@ -418,39 +401,14 @@
                                                   //                                                  NSString *regex = @"[ABCDEFGHJKLMNPRSTUVWXYZ1234567890]{17}";
                                                   NSPredicate *test = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", regex];
                                                   //识别成功
+                                              dispatch_async(dispatch_get_main_queue(), ^{
+                                                  if(_scanner!=nil)
+                                                      [_scanner fireEvent:@"scan" params:@{@"data":elementText}];
+                                              });
+                                             
                                               
-                                              if(_scanner!=nil)
-                                                  [_scanner fireEvent:@"scan" params:@{@"data":elementText}];
                                               
-                                              
-//                                              if ([self regexTarget:regex str:elementText]) {
-//                                                      
-//                                                      //连续两次识别结果一致，则输出最终结果
-//                                                      if ([self->recognizedText isEqualToString:elementText]) {
-//                                                          
-//                                                          //停止扫描
-////                                                          [self.session stopRunning];
-//                                                          
-//                                                          //播放音效
-//                                                          NSURL *url=[[NSBundle mainBundle]URLForResource:@"scanSuccess.wav" withExtension:nil];
-//                                                          SystemSoundID soundID=8787;
-//                                                          AudioServicesCreateSystemSoundID((__bridge CFURLRef)url, &soundID);
-//                                                          AudioServicesPlaySystemSound(soundID);
-//                                                          
-//                                                          //在屏幕上输入结果
-////                                                          self->textLabel.text = self->recognizedText;
-//                                                          if(_scanner!=nil)
-//                                                          [_scanner fireEvent:@"scan" params:@{@"data":self->recognizedText}];
-////                                                          NSLog(@"%@",self->recognizedText);
-//                                                      }else
-//                                                      {
-//                                                          //马上再识别一次，对比结果对比
-//                                                          self->recognizedText = elementText;
-//                                                          self->isInference = NO;
-//                                                      }
-//                                                      return;
-//                                                  }
-//                                              }
+
                                           }
                                       }
                                   }
@@ -500,7 +458,7 @@
     if (self.session) {
         [self.session stopRunning];
     }
-    
+
     [device removeObserver:self forKeyPath:@"adjustingFocus" context:nil];
 }
 

@@ -58,46 +58,29 @@ WX_EXPORT_METHOD(@selector(start))
     ((VINDetectionViewController*)self.vc).regex=self.regex;
        ((VINDetectionViewController*)self.vc).scanner=self;
 
-    
-//    CGRect rect=  [_layer metadataOutputRectOfInterestForRect:frame];
-    //    [_output setRectOfInterest:rect];
 }
 
--(UIView*)loadView
-{
-    //    UIViewController *vc= [[UIViewController alloc] init];
-    //    self.host=vc;
-    //    [self.weexInstance.viewController addChildViewController:self.host];
-    //     [self.host didMoveToParentViewController:self.weexInstance.viewController];
-    //    return vc.view;
-    WXView *view=  [super loadView];;
-    
-    return  [UIView new];
-}
+ 
 
 
 
 
 -(void)insertSubview:(WXComponent *)subcomponent atIndex:(NSInteger)index{
     
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if([subcomponent isKindOfClass:[scanArea class]]){
+            [super insertSubview:subcomponent atIndex:index];
+            _scanArea=subcomponent;
+            if(self.scanArea)
+                [self.view bringSubviewToFront:self.scanArea.view];
+            //        CGRect frame= _scanArea.calculatedFrame;
+            ((VINDetectionViewController*)self.vc).scanArea=subcomponent;
+            int k=0;
+            //        [vc setScanArea:frame];
+        }
+    });
     
-    if([subcomponent isKindOfClass:[scanArea class]]){
-        [super insertSubview:subcomponent atIndex:index];
-        _scanArea=subcomponent;
-        if(self.scanArea)
-            [self.view bringSubviewToFront:self.scanArea.view];
-//        CGRect frame= _scanArea.calculatedFrame;
-           ((VINDetectionViewController*)self.vc).scanArea=subcomponent;
-        int k=0;
-//        [vc setScanArea:frame];
-    }
-//    [self.view addSubviewFull:subcomponent.view];
-//    [self show];
-//    [subcomponent fireEvent:@"load" params:self.weexInstance.param];
     
-//    CGRect frame= subcomponent.view.frame
-//    CGRect rect=  [_layer metadataOutputRectOfInterestForRect:frame];
-//    [_output setRectOfInterest:rect];
 }
 
 @end
