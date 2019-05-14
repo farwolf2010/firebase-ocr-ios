@@ -259,7 +259,7 @@
     static CMVideoFormatDescriptionRef videoInfo = NULL;
     
     if (pixbuffer == NULL) {
-        int delt=500;
+        int delt=800;
         NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
                                  [NSNumber numberWithInt:g_width_size],     kCVPixelBufferWidthKey,
                                  [NSNumber numberWithInt:g_height_size+delt],    kCVPixelBufferHeightKey, nil];
