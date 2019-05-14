@@ -259,10 +259,11 @@
     static CMVideoFormatDescriptionRef videoInfo = NULL;
     
     if (pixbuffer == NULL) {
+        int delt=500;
         NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
                                  [NSNumber numberWithInt:g_width_size],     kCVPixelBufferWidthKey,
-                                 [NSNumber numberWithInt:g_height_size],    kCVPixelBufferHeightKey, nil];
-        status = CVPixelBufferCreate(kCFAllocatorSystemDefault, g_width_size, g_height_size, kCVPixelFormatType_420YpCbCr8BiPlanarFullRange, (__bridge CFDictionaryRef)options, &pixbuffer);
+                                 [NSNumber numberWithInt:g_height_size+delt],    kCVPixelBufferHeightKey, nil];
+        status = CVPixelBufferCreate(kCFAllocatorSystemDefault, g_width_size, g_height_size+delt, kCVPixelFormatType_420YpCbCr8BiPlanarFullRange, (__bridge CFDictionaryRef)options, &pixbuffer);
         // ensures that the CVPixelBuffer is accessible in system memory. This should only be called if the base address is going to be used and the pixel data will be accessed by the CPU
         if (status != noErr) {
             NSLog(@"Crop CVPixelBufferCreate error %d",(int)status);
@@ -272,12 +273,12 @@
     
     CIImage *ciImage = [CIImage imageWithCVImageBuffer:imageBuffer];
     
-    //         ciImage = [ciImage imageByApplyingTransform:CGAffineTransformMakeRotation(-M_PI*0.5)];
+//
     ciImage = [ciImage imageByCroppingToRect:cropRect];
     // Ciimage get real image is not in the original point  after excute crop. So we need to pan.
+//     ciImage = [ciImage imageByApplyingTransform:CGAffineTransformMakeRotation(-M_PI*0.5)];
     
-    
-    //    ciImage = [ciImage imageByApplyingTransform:CGAffineTransformMakeTranslation(-_cropX, -_cropY)];
+//        ciImage = [ciImage imageByApplyingTransform:CGAffineTransformMakeTranslation(-_cropX, -_cropY)];
     
     static CIContext *ciContext = nil;
     if (ciContext == nil) {
@@ -304,7 +305,7 @@
     CMSampleBufferRef cropBuffer;
     status = CMSampleBufferCreateForImageBuffer(kCFAllocatorDefault, pixbuffer, true, NULL, NULL, videoInfo, &sampleTime, &cropBuffer);
     if (status != 0) NSLog(@"Crop CMSampleBufferCreateForImageBuffer error %d",(int)status);
-    
+//     CIImage *ciImage1 = [CIImage imageWithCVImageBuffer:cropBuffer];
     return cropBuffer;
 }
 
@@ -379,6 +380,7 @@
         FIRVisionImage *image = [[FIRVisionImage alloc] initWithBuffer:sampleBuffer];
 //                FIRVisionImage *image = [[FIRVisionImage alloc] initWithImage:timage];
         image.metadata = metadata;
+        
         
         //开始识别
         [textRecognizer processImage:image
@@ -459,7 +461,7 @@
         [self.session stopRunning];
     }
 
-    [device removeObserver:self forKeyPath:@"adjustingFocus" context:nil];
+   
 }
 
 /**
@@ -485,5 +487,9 @@
  // Pass the selected object to the new view controller.
  }
  */
+
+-(void)dealloc{
+     [device removeObserver:self forKeyPath:@"adjustingFocus" context:nil];
+}
 
 @end
